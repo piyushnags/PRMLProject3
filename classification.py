@@ -209,8 +209,8 @@ def taiji_main(args):
     # For each subject LOSO
     for i in range(num_subs):
         print('\n\nTraining subject: {}'.format(i+1))
-        train_data = TaijiData(data_dir='data', subject=i+1, split='train')
-        test_data = TaijiData(data_dir ='data', subject=i+1, split='test')
+        train_data = TaijiData(data_dir=args.data_root, subject=i+1, split='train')
+        test_data = TaijiData(data_dir =args.data_root, subject=i+1, split='test')
         train_loader = DataLoader(train_data, batch_size=args.batch_size, shuffle=True)
         test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False)
         model = MLP(input_dim=train_data.data_dim, hidden_dim=1024, output_dim=num_forms).to(device)

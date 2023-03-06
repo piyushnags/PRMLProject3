@@ -27,10 +27,25 @@ class MLP(nn.Module):
             output_dim (int): number of output units
         """
         super(MLP, self).__init__()
+        n = hidden_dim//2
         self.layers = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.Linear(hidden_dim, output_dim),
+            nn.Linear(input_dim, n),
+
+            nn.Linear(n, n),
+            nn.ReLU(),
+
+            nn.Linear(n, n),
+            nn.ReLU(),
+
+            nn.Linear(n, n),
+            nn.BatchNorm1d(n, eps=1e-7),
+            nn.ReLU(),
+
+            nn.Linear(n, n),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+
+            nn.Linear(n, output_dim),
         )
 
     def forward(self, x):
