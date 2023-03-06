@@ -27,16 +27,34 @@ class MLP(nn.Module):
             output_dim (int): number of output units
         """
         super(MLP, self).__init__()
+
+        # Modified Arch 1
+        # self.layers = nn.Sequential(
+        #     nn.Linear(input_dim, hidden_dim//2),
+
+        #     nn.Linear(hidden_dim//2, hidden_dim//2),
+        #     nn.ReLU(),
+
+        #     nn.Linear(hidden_dim//2, hidden_dim//2),
+        #     nn.ReLU(),
+
+        #     nn.Linear(hidden_dim//2, output_dim),
+        # )
+
+        # Modified Arch 2
         self.layers = nn.Sequential(
             nn.Linear(input_dim, hidden_dim//2),
 
             nn.Linear(hidden_dim//2, hidden_dim//2),
-            nn.ReLU(),
+            nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
+            nn.ReLU6(),
 
             nn.Linear(hidden_dim//2, hidden_dim//2),
-            nn.ReLU(),
+            nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
+            nn.ReLU6(),
 
             nn.Linear(hidden_dim//2, output_dim),
+            nn.Dropout(0.2),
         )
 
     def forward(self, x):
