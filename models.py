@@ -36,7 +36,7 @@ class MLP(nn.Module):
             nn.Linear(hidden_dim//2, hidden_dim//2),
             nn.ReLU(),
 
-            nn.Linear(hidden_dim, output_dim),
+            nn.Linear(hidden_dim//2, output_dim),
         )
 
     def forward(self, x):
