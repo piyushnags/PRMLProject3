@@ -29,6 +29,7 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
 
         # Modified Arch 1
+        # Best Hyperparameters: (Batch size=1024, lr=0.010, epochs=20)
         # self.layers = nn.Sequential(
         #     nn.Linear(input_dim, hidden_dim//2),
 
@@ -42,6 +43,7 @@ class MLP(nn.Module):
         # )
 
         # Modified Arch 2
+        # Best Hyperparameters: (Batch size=1024, lr=0.16, epochs=20)
         self.layers = nn.Sequential(
             nn.Linear(input_dim, hidden_dim//2),
 
