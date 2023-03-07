@@ -109,7 +109,7 @@ def train(model, train_loader, optimizer, criterion, epochs,
             if log_dir is not None:
                 if not os.path.exists(log_dir):
                     os.makedirs(log_dir)
-                ckpt_path = os.path.join(log_dir, 'ckpt_{}.ckpt'.format(epoch))
+                ckpt_path = os.path.join(log_dir, 'ckpt_{}.ckpt'.format(epoch+1))
                 torch.save({
                     "model_state_dict":model.state_dict(),
                     "optimizer_state_dict":optimizer.state_dict(),
