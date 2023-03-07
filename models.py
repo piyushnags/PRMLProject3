@@ -30,34 +30,34 @@ class MLP(nn.Module):
 
         # Modified Arch 1
         # Best Hyperparameters: (Batch size=1024, lr=0.010, epochs=20)
-        # self.layers = nn.Sequential(
-        #     nn.Linear(input_dim, hidden_dim//2),
-
-        #     nn.Linear(hidden_dim//2, hidden_dim//2),
-        #     nn.ReLU(),
-
-        #     nn.Linear(hidden_dim//2, hidden_dim//2),
-        #     nn.ReLU(),
-
-        #     nn.Linear(hidden_dim//2, output_dim),
-        # )
-
-        # Modified Arch 2
-        # Best Hyperparameters: (Batch size=1024, lr=0.16, epochs=20)
         self.layers = nn.Sequential(
             nn.Linear(input_dim, hidden_dim//2),
 
             nn.Linear(hidden_dim//2, hidden_dim//2),
-            nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
-            nn.ReLU6(),
+            nn.ReLU(),
 
             nn.Linear(hidden_dim//2, hidden_dim//2),
-            nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
-            nn.ReLU6(),
+            nn.ReLU(),
 
             nn.Linear(hidden_dim//2, output_dim),
-            nn.Dropout(0.2),
         )
+
+        # Modified Arch 2
+        # Best Hyperparameters: (Batch size=1024, lr=0.16, epochs=20)
+        # self.layers = nn.Sequential(
+        #     nn.Linear(input_dim, hidden_dim//2),
+
+        #     nn.Linear(hidden_dim//2, hidden_dim//2),
+        #     nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
+        #     nn.ReLU6(),
+
+        #     nn.Linear(hidden_dim//2, hidden_dim//2),
+        #     nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
+        #     nn.ReLU6(),
+
+        #     nn.Linear(hidden_dim//2, output_dim),
+        #     nn.Dropout(0.2),
+        # )
 
     def forward(self, x):
         return F.log_softmax(self.layers(x), dim=1)
@@ -78,42 +78,42 @@ class CNN(nn.Module):
         self.img_size = img_size
         
         # Basic Arch
-        # self.conv_layers= nn.Sequential(
-        #     nn.Conv2d(self.input_channels, 32, kernel_size=3, padding=1),
-        #     nn.ReLU(), 
-        #     nn.MaxPool2d(kernel_size=2, stride=2),
-        #     nn.Conv2d(32, 64, kernel_size=3, padding=1),
-        #     nn.ReLU(),
-        #     nn.MaxPool2d(kernel_size=2, stride=2),
-        #     nn.Conv2d(64, 128, kernel_size=3, padding=1),
-        #     nn.MaxPool2d(kernel_size=2, stride=2),
-        #     nn.ReLU(),
-        # )
-        # self.fc_1 = nn.Linear(128 * (self.img_size // 8) * (self.img_size // 8), 1024)
-        # self.fc_2 = nn.Linear(1024, self.num_classes)
-
-        # Modified Arch 1
-        self.conv_layers = nn.Sequential(
+        self.conv_layers= nn.Sequential(
             nn.Conv2d(self.input_channels, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-            nn.LeakyReLU(),
-
+            nn.ReLU(), 
             nn.MaxPool2d(kernel_size=2, stride=2),
-
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-            nn.LeakyReLU(),
-
+            nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
-
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-            
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.LeakyReLU(),
+            nn.ReLU(),
         )
         self.fc_1 = nn.Linear(128 * (self.img_size // 8) * (self.img_size // 8), 1024)
         self.fc_2 = nn.Linear(1024, self.num_classes)
+
+        # Modified Arch 1
+        # self.conv_layers = nn.Sequential(
+        #     nn.Conv2d(self.input_channels, 32, kernel_size=3, padding=1),
+        #     nn.BatchNorm2d(32, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+        #     nn.LeakyReLU(),
+
+        #     nn.MaxPool2d(kernel_size=2, stride=2),
+
+        #     nn.Conv2d(32, 64, kernel_size=3, padding=1),
+        #     nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+        #     nn.LeakyReLU(),
+
+        #     nn.MaxPool2d(kernel_size=2, stride=2),
+
+        #     nn.Conv2d(64, 128, kernel_size=3, padding=1),
+        #     nn.BatchNorm2d(128, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+            
+        #     nn.MaxPool2d(kernel_size=2, stride=2),
+        #     nn.LeakyReLU(),
+        # )
+        # self.fc_1 = nn.Linear(128 * (self.img_size // 8) * (self.img_size // 8), 1024)
+        # self.fc_2 = nn.Linear(1024, self.num_classes)
 
         # Modified Arch 2
         # self.conv_layers = nn.Sequential(
