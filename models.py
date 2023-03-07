@@ -64,7 +64,7 @@ class MLP(nn.Module):
 
 class CNN(nn.Module):
     # Baseline Arch Best Hyperparameters: (Batch size: 1024, lr: 0.002)
-    # Modified Arch 1 Best Hyperparameters: (Batch size: 1024, lr: 0.006)
+    # Modified Arch 1 Best Hyperparameters: (Batch size: 1024, lr: 0.008, Epochs: 40)
     def __init__(self, input_channels=1, img_size=32, num_classes=17):
         """
         Args:
@@ -117,45 +117,26 @@ class CNN(nn.Module):
 
         # Modified Arch 2
         # self.conv_layers = nn.Sequential(
-        #     # 128 feature maps from 3x3 conv
-        #     nn.Conv2d(self.input_channels, 128, kernel_size=3, padding=1),
+        #     nn.Conv2d(self.input_channels, 64, kernel_size=3, padding=1),
+        #     nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+        #     nn.LeakyReLU(),
+
+        #     nn.MaxPool2d(kernel_size=2, stride=2),
+
+        #     nn.Conv2d(64, 128, kernel_size=3, padding=1),
         #     nn.BatchNorm2d(128, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
         #     nn.LeakyReLU(),
 
-        #     # Pooling 
         #     nn.MaxPool2d(kernel_size=2, stride=2),
 
-        #     # 3x3 Depth-wise convolution
-        #     nn.Conv2d(128, 128, kernel_size=3, padding=1),
-        #     nn.BatchNorm2d(128, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-        #     nn.LeakyReLU(),
-
-        #     # Pooling
-        #     nn.MaxPool2d(kernel_size=2, stride=2),
-
-        #     # Point-wise Convolution
         #     nn.Conv2d(128, 64, kernel_size=1, padding=1),
         #     nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-        #     nn.LeakyReLU(),
-
-        #     # 3x3 Depth-wise Convolution
-        #     nn.Conv2d(64, 64, kernel_size=3, padding=1),
-        #     nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-        #     nn.LeakyReLU(),
-
-        #     # Point-wise Convolution
-        #     nn.Conv2d(64, 16, kernel_size=1, padding=1),
-        #     nn.BatchNorm2d(16, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-        #     nn.LeakyReLU(),
-
-        #     nn.Conv2d(16, 128, kernel_size=3, padding=1),
-        #     nn.BatchNorm2d(128, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
             
         #     nn.MaxPool2d(kernel_size=2, stride=2),
         #     nn.LeakyReLU(),
         # )
-        # self.fc_1 = nn.Linear(128 * (self.img_size // 8) * (self.img_size // 8), 4096)
-        # self.fc_2 = nn.Linear(4096, self.num_classes)
+        # self.fc_1 = nn.Linear(64 * (self.img_size // 8) * (self.img_size // 8), 1024)
+        # self.fc_2 = nn.Linear(1024, self.num_classes)
 
 
     def forward(self, x):
