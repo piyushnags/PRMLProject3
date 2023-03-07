@@ -153,19 +153,19 @@ def wallpaper_main(args):
     if args.aug_train:
         augmentation = [
             transforms.RandomRotation(degrees=(0, 360)),
-            transforms.RandomEqualize(),
             transforms.RandomInvert(),
             transforms.RandomCrop(size=(args.img_size, args.img_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomAffine(degrees=0, translate=(0.3, 0.3)),
             transforms.RandomAffine(degrees=0, translate=(0, 0), scale=(1, 2))
         ]
-        preprocess.extend(augmentation)
+        augmentation = preprocess + augmentation
 
 
     # Compose the transforms that will be applied to the images. Feel free to adjust this.
     transform = transforms.Compose(preprocess)
-    train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=transform)
+    augment = transforms.Compose(augmentation)
+    train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
@@ -281,6 +281,43 @@ def taiji_main(args):
              sub_test_acc=sub_test_acc, sub_class_test=sub_class_test, overall_train_mat=overall_train_mat, overall_test_mat=overall_test_mat)
 
 
+def evaluate_model(args: Any):
+    num_classes = 17
+    if args.device == 'cuda':
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device('cpu')
+    
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
+    data_root = os.path.join(args.data_root, 'Wallpaper')
+    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
+        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
+
+    transform = transforms.Compose([
+        transforms.Resize((args.img_size, args.img_size)),
+        transforms.Grayscale(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, ), (0.5, )),
+    ])
+    test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+
+    model = CNN(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    criterion = nn.CrossEntropyLoss()
+    if args.path:
+        model.load_state_dict( torch.load(args.path) )
+    else:
+        print('No model .pth file found!')
+    
+    test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
+    classes_test, overall_test_mat = get_stats(test_preds, test_targets, num_classes)
+    print(f'Test accuracy: {test_acc*100:.3f}')
+
+
+
 if __name__ == '__main__':
     args = arg_parse()
 
@@ -289,6 +326,8 @@ if __name__ == '__main__':
             wallpaper_main(args)
         visualize(args, dataset='Wallpaper')
         plot_training_curve(args)
+        if args.test_model:
+            evaluate_model(args)
     else: 
         if args.train:
             taiji_main(args)
