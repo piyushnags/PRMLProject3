@@ -153,7 +153,6 @@ def wallpaper_main(args):
     if args.aug_train:
         augmentation = [
             transforms.RandomRotation(degrees=(0, 360)),
-            transforms.RandomInvert(),
             transforms.RandomCrop(size=(args.img_size, args.img_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomAffine(degrees=0, translate=(0.3, 0.3)),
@@ -173,7 +172,7 @@ def wallpaper_main(args):
 
     print(f"Training on {len(train_dataset)} images, testing on {len(test_dataset)} images.")
     # Initialize the model, optimizer, and loss function
-    model = CNN(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
+    model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -304,8 +303,7 @@ def evaluate_model(args: Any):
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
-    model = CNN(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
     if args.model_path:
         model.load_state_dict( torch.load(args.model_path) )
