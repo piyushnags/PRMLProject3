@@ -144,17 +144,27 @@ def wallpaper_main(args):
     np.random.seed(args.seed)
 
     # TODO: Augment the training data given the transforms in the assignment description.
-    if args.aug_train:
-        raise NotImplementedError
-
-
-    # Compose the transforms that will be applied to the images. Feel free to adjust this.
-    transform = transforms.Compose([
+    preprocess = [
         transforms.Resize((args.img_size, args.img_size)),
         transforms.Grayscale(),
         transforms.ToTensor(),
         transforms.Normalize((0.5, ), (0.5, )),
-    ])
+    ]
+    if args.aug_train:
+        augmentation = [
+            transforms.RandomRotation(degrees=(0, 360)),
+            transforms.RandomEqualize(),
+            transforms.RandomInvert(),
+            transforms.RandomCrop(size=(args.img_size, args.img_size)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomAffine(degrees=0, translate=(0.3, 0.3)),
+            transforms.RandomAffine(degrees=0, translate=0, scale=(1, 2))
+        ]
+        preprocess.extend(augmentation)
+
+
+    # Compose the transforms that will be applied to the images. Feel free to adjust this.
+    transform = transforms.Compose(preprocess)
     train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=transform)
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)

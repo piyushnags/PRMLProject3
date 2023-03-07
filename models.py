@@ -65,6 +65,7 @@ class MLP(nn.Module):
 class CNN(nn.Module):
     # Baseline Arch Best Hyperparameters: (Batch size: 1024, lr: 0.002)
     # Modified Arch 1 Best Hyperparameters: (Batch size: 1024, lr: 0.008, Epochs: 40)
+    # Modified Arch 2 Best Hyperparameters: (Batch size: 512, lr: 0.004, Epochs: 20)
     def __init__(self, input_channels=1, img_size=32, num_classes=17):
         """
         Args:
