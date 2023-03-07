@@ -158,7 +158,7 @@ def wallpaper_main(args):
             transforms.RandomCrop(size=(args.img_size, args.img_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomAffine(degrees=0, translate=(0.3, 0.3)),
-            transforms.RandomAffine(degrees=0, translate=0, scale=(1, 2))
+            transforms.RandomAffine(degrees=0, translate=(0, 0), scale=(1, 2))
         ]
         preprocess.extend(augmentation)
 
