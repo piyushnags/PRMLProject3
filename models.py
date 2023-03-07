@@ -129,13 +129,17 @@ class CNN(nn.Module):
 
         #     nn.MaxPool2d(kernel_size=2, stride=2),
 
-        #     nn.Conv2d(128, 64, kernel_size=1, padding=1),
+        #     nn.Conv2d(128, 64, kernel_size=1),
         #     nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+        #     nn.LeakyReLU(),
+
+        #     nn.Conv2d(64, 16, kernel_size=3, padding=1),
+        #     nn.BatchNorm2d(16, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
             
         #     nn.MaxPool2d(kernel_size=2, stride=2),
         #     nn.LeakyReLU(),
         # )
-        # self.fc_1 = nn.Linear(64 * (self.img_size // 8) * (self.img_size // 8), 1024)
+        # self.fc_1 = nn.Linear(16 * (self.img_size // 8) * (self.img_size // 8), 1024)
         # self.fc_2 = nn.Linear(1024, self.num_classes)
 
 
