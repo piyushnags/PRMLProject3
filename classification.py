@@ -59,7 +59,7 @@ def test(model, test_loader, device, criterion):
 
 #  Note log_interval doesn't actually log to a file but is used for printing. This can be changed if you want to log to a file.
 def train(model, train_loader, optimizer, criterion, epochs, 
-          log_interval, device):
+          log_interval, device, log_dir=None):
     """
     Train the model and periodically log the loss and accuracy.
     Args:
@@ -104,6 +104,19 @@ def train(model, train_loader, optimizer, criterion, epochs,
         per_epoch_acc.append(train_acc)
         if epoch % log_interval == 0:
             print('Epoch: {}, Loss: {}, Acc: {}'.format(epoch, train_loss, train_acc))
+            
+            # Save Checkpoints every log_interval epochs
+            if log_dir is not None:
+                if not os.path.exists(log_dir):
+                    os.makedirs(log_dir)
+                ckpt_path = os.path.join(log_dir, 'ckpt_{}.ckpt'.format(epoch))
+                torch.save({
+                    "model_state_dict":model.state_dict(),
+                    "optimizer_state_dict":optimizer.state_dict(),
+                    "epoch":epoch,
+                    "per_epoch_loss":per_epoch_loss,
+                    "per_epoch_acc":per_epoch_acc,
+                }, ckpt_path)
 
     preds = np.concatenate(preds)
     targets = np.concatenate(targets)
@@ -156,7 +169,7 @@ def wallpaper_main(args):
 
     # Train + test the model
     model, per_epoch_loss, per_epoch_acc, train_preds, train_targets = train(model, train_loader, optimizer, criterion, args.num_epochs, 
-                                                                             args.log_interval, device )
+                                                                             args.log_interval, device, args.log_dir )
     test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
 
     # Get stats 
@@ -177,6 +190,9 @@ def wallpaper_main(args):
                 test_loss=test_loss, test_acc=test_acc)
 
     # Note: The code does not save the model but you may do so if you choose with the args.save_model flag.
+    if args.save_model:
+        model_dir = os.path.join( args.save_dir, 'cnn.pth' )
+        torch.save(model.state_dict(), model_dir) 
 
 def taiji_main(args):
     """
