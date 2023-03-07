@@ -235,7 +235,7 @@ def taiji_main(args):
 
         # Train + test the model
         model, train_losses, per_epoch_train_acc, train_preds, train_targets \
-                        = train(model, train_loader, optimizer, criterion, args.num_epochs, args.log_interval, device)
+                        = train(model, train_loader, optimizer, criterion, args.num_epochs, args.log_interval, device, args.log_dir)
         test_loss, test_acc, test_pred, test_targets = test(model, test_loader, device, criterion)
 
         # Print accs to three decimal places
