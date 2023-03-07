@@ -307,8 +307,8 @@ def evaluate_model(args: Any):
     model = CNN(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     criterion = nn.CrossEntropyLoss()
-    if args.path:
-        model.load_state_dict( torch.load(args.path) )
+    if args.model_path:
+        model.load_state_dict( torch.load(args.model_path) )
     else:
         print('No model .pth file found!')
     
