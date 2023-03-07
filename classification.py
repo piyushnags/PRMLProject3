@@ -321,13 +321,13 @@ def evaluate_model(args: Any):
 if __name__ == '__main__':
     args = arg_parse()
 
+    if args.test_model:
+        evaluate_model(args)
     if args.dataset == 'Wallpaper':
         if args.train:
             wallpaper_main(args)
         visualize(args, dataset='Wallpaper')
         plot_training_curve(args)
-        if args.test_model:
-            evaluate_model(args)
     else: 
         if args.train:
             taiji_main(args)
