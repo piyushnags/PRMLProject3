@@ -102,8 +102,8 @@ def train(model, train_loader, optimizer, criterion, epochs,
         train_loss /= len(train_loader)
         train_acc = correct / len(train_loader.dataset)
         per_epoch_acc.append(train_acc)
-        if epoch % log_interval == 0:
-            print('Epoch: {}, Loss: {}, Acc: {}'.format(epoch, train_loss, train_acc))
+        if (epoch+1) % log_interval == 0:
+            print('Epoch: {}, Loss: {}, Acc: {}'.format(epoch+1, train_loss, train_acc))
             
             # Save Checkpoints every log_interval epochs
             if log_dir is not None:

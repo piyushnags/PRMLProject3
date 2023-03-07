@@ -43,7 +43,7 @@ class MLP(nn.Module):
         )
 
         # Modified Arch 2
-        # Best Hyperparameters: (Batch size=1024, lr=0.16, epochs=20)
+        # Best Hyperparameters: (Batch size=1024, lr=0.016, epochs=20)
         # self.layers = nn.Sequential(
         #     nn.Linear(input_dim, hidden_dim//2),
 
