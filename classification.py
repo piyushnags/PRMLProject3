@@ -314,10 +314,13 @@ def evaluate_model(model: nn.Module, args: Any):
     # model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
     model.to(device)
     criterion = nn.CrossEntropyLoss()
-    if args.model_path:
+    if args.model_path and not args.eval_ckpt:
         model.load_state_dict( torch.load(args.model_path) )
+    elif args.model_path and args.eval_ckpt:
+        state_dict = torch.load(args.model_path)['model_state_dict']
+        model.load_state_dict(state_dict)
     else:
-        print('No model .pth file found!')
+        print('No model .pth or .ckpt file found!')
     
     test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
     classes_test, overall_test_mat = get_stats(test_preds, test_targets, num_classes)
