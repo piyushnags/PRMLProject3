@@ -59,6 +59,7 @@ def arg_parse():
     # Evaluation only
     parser.add_argument('--test_model', action='store_true', help='test model on challenge dataset using weights')
     parser.add_argument('--model_path', type=str, default='', help='Path to model weights after training')
+    parser.add_argument('--model_type', type=str, default='CNN2', help='name of model architecture to be evaluated')
 
     # Training Resnet Network
     parser.add_argument('--resnet', action='store_true', help='Train pretrained resnet classifier')  

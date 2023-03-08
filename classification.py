@@ -279,7 +279,7 @@ def taiji_main(args):
              sub_test_acc=sub_test_acc, sub_class_test=sub_class_test, overall_train_mat=overall_train_mat, overall_test_mat=overall_test_mat)
 
 
-def evaluate_model(args: Any):
+def evaluate_model(model: nn.Module, args: Any):
     num_classes = 17
     if args.device == 'cuda':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -302,7 +302,8 @@ def evaluate_model(args: Any):
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
-    model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
+    # model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
+    model.to(device)
     criterion = nn.CrossEntropyLoss()
     if args.model_path:
         model.load_state_dict( torch.load(args.model_path) )
@@ -316,7 +317,7 @@ def evaluate_model(args: Any):
 
 
 # -----------------------------------------------------------------------------------------------
-def resnet_main(args):
+def resnet_main(args: Any):
     """
     Main function for training and testing the Siamese Network.
     Args:
@@ -407,9 +408,16 @@ if __name__ == '__main__':
     args = arg_parse()
 
     if args.test_model:
-        evaluate_model(args)
+        if args.model_type == 'CNN2':
+            model = CNN2(input_channels=1, img_size=args.img_size, num_classes=17)
+        elif args.model_type == 'Resnet':
+            model = Resnet()
+        else:
+            raise ValueError('{} model not supported, please try Resnet/CNN2'.format(args.model_type))
+        evaluate_model(model, args)
     elif args.resnet:
         resnet_main(args)
+        plot_training_curve(args)
     else:
         if args.dataset == 'Wallpaper':
             if args.train:
