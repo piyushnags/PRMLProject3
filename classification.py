@@ -293,12 +293,21 @@ def evaluate_model(model: nn.Module, args: Any):
     if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
         os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
 
-    transform = transforms.Compose([
-        transforms.Resize((args.img_size, args.img_size)),
-        transforms.Grayscale(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, ), (0.5, )),
-    ])
+    if args.model_type == 'CNN2':
+        preprocess = [
+            transforms.Resize((args.img_size, args.img_size)),
+            transforms.Grayscale(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, ), (0.5, )),
+        ]
+    elif args.model_type == 'Resnet':
+        preprocess = [
+            transforms.Resize((224, 224)),
+            transforms.Grayscale(num_output_channels=3),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    transform = transforms.Compose(preprocess)
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
