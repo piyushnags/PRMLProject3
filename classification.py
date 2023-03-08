@@ -340,9 +340,9 @@ def resnet_main(args):
     # TODO: Augment the training data given the transforms in the assignment description.
     preprocess = [
         transforms.Resize((224, 224)),
-        transforms.Grayscale(),
+        transforms.Grayscale(num_output_channels=3),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, ), (0.5, )),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]
     augmentation = [
         transforms.RandomRotation(degrees=(0, 360)),
