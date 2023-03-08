@@ -56,8 +56,12 @@ def arg_parse():
     parser.add_argument('--test_set', type=str, default='test', help='Test set to use (test or test_challenge)')
     parser.add_argument('--aug_train', action='store_true', help='Use augmented training data')
 
+    # Evaluation only
     parser.add_argument('--test_model', action='store_true', help='test model on challenge dataset using weights')
-    parser.add_argument('--model_path', type=str, default='', help='Path to model weights after training')     
+    parser.add_argument('--model_path', type=str, default='', help='Path to model weights after training')
+
+    # Training Resnet Network
+    parser.add_argument('--resnet', action='store_true', help='Train pretrained resnet classifier')  
 
     return parser.parse_args()
 

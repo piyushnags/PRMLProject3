@@ -155,8 +155,7 @@ def wallpaper_main(args):
             transforms.RandomRotation(degrees=(0, 360)),
             transforms.RandomCrop(size=(args.img_size, args.img_size)),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomAffine(degrees=0, translate=(0.3, 0.3)),
-            transforms.RandomAffine(degrees=0, translate=(0, 0), scale=(1, 2))
+            transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
         ]
         augmentation = preprocess + augmentation
 
@@ -316,19 +315,113 @@ def evaluate_model(args: Any):
 
 
 
+# -----------------------------------------------------------------------------------------------
+def resnet_main(args):
+    """
+    Main function for training and testing the Siamese Network.
+    Args:
+        args (argparse.Namespace): Arguments.
+    """
+    num_classes = 17
+    if args.device == 'cuda':
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device('cpu')
+
+    # Load the wallpaper dataset
+    data_root = os.path.join(args.data_root, 'Wallpaper')
+    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
+        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
+
+    # Seed torch and numpy
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
+    # TODO: Augment the training data given the transforms in the assignment description.
+    preprocess = [
+        transforms.Resize((224, 224)),
+        transforms.Grayscale(),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        ),
+    ]
+    augmentation = [
+        transforms.RandomRotation(degrees=(0, 360)),
+        transforms.RandomCrop(size=(224, 224)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
+    ]
+    augmentation = preprocess + augmentation
+
+
+    # Compose the transforms that will be applied to the images. Feel free to adjust this.
+    transform = transforms.Compose(preprocess)
+    augment = transforms.Compose(augmentation)
+    train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
+    test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+
+
+    print(f"Training on {len(train_dataset)} images, testing on {len(test_dataset)} images.")
+    # Initialize the model, optimizer, and loss function
+    model = Resnet(pretrained=True).to(device)
+
+    # Freeze backbone for transfer learning
+    for child in list( model.children() )[:-1]:
+        for param in child.parameters():
+            param.requires_grad_(False)
+
+    optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
+    criterion = nn.CrossEntropyLoss()
+
+    # Train + test the model
+    model, per_epoch_loss, per_epoch_acc, train_preds, train_targets = train(model, train_loader, optimizer, criterion, args.num_epochs, 
+                                                                             args.log_interval, device, args.log_dir )
+    test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
+
+    # Get stats 
+    classes_train, overall_train_mat = get_stats(train_preds, train_targets, num_classes)
+    classes_test, overall_test_mat = get_stats(test_preds, test_targets, num_classes)
+
+
+    print(f'\n\nTrain accuracy: {per_epoch_acc[-1]*100:.3f}')
+    print(f'Test accuracy: {test_acc*100:.3f}')
+
+    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set, 'stats')):
+        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set, 'stats'))
+    overall_file_name = os.path.join(args.save_dir, 'Wallpaper', args.test_set, 'stats', 'overall.npz')
+
+    np.savez(overall_file_name, classes_train=classes_train, overall_train_mat=overall_train_mat, 
+                classes_test=classes_test, overall_test_mat=overall_test_mat, 
+                per_epoch_loss=per_epoch_loss, per_epoch_acc=per_epoch_acc, 
+                test_loss=test_loss, test_acc=test_acc)
+
+    # Note: The code does not save the model but you may do so if you choose with the args.save_model flag.
+    if args.save_model:
+        model_dir = os.path.join( args.save_dir, 'cnn.pth' )
+        torch.save(model.state_dict(), model_dir) 
+
+
+
 if __name__ == '__main__':
     args = arg_parse()
 
     if args.test_model:
         evaluate_model(args)
-    if args.dataset == 'Wallpaper':
-        if args.train:
-            wallpaper_main(args)
-        visualize(args, dataset='Wallpaper')
-        plot_training_curve(args)
-    else: 
-        if args.train:
-            taiji_main(args)
-        visualize(args, dataset='Taiji')
-        plot_training_curve(args)
+    elif args.resnet:
+        resnet_main(args)
+    else:
+        if args.dataset == 'Wallpaper':
+            if args.train:
+                wallpaper_main(args)
+            visualize(args, dataset='Wallpaper')
+            plot_training_curve(args)
+        else: 
+            if args.train:
+                taiji_main(args)
+            visualize(args, dataset='Taiji')
+            plot_training_curve(args)
 

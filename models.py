@@ -17,6 +17,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from torchvision.models import resnet101, ResNet101_Weights
+from torch import Tensor
+
 # TODO: Can the MLP be improved?
 class MLP(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
@@ -166,13 +169,7 @@ class CNN2(nn.Module):
         self.img_size = img_size
 
         self.conv_layers = nn.Sequential(
-            nn.Conv2d(self.input_channels, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
-            nn.LeakyReLU(),
-
-            nn.MaxPool2d(kernel_size=2, stride=2),
-
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.Conv2d(self.input_channels, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
             nn.LeakyReLU(),
 
@@ -180,11 +177,21 @@ class CNN2(nn.Module):
 
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+            nn.LeakyReLU(),
+
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(128, 64, kernel_size=1),
+            nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
+            nn.LeakyReLU(),
+
+            nn.Conv2d(64, 16, kernel_size=3, padding=1),
+            nn.BatchNorm2d(16, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),
             
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.LeakyReLU(),
         )
-        self.fc_1 = nn.Linear(128 * (self.img_size // 8) * (self.img_size // 8), 1024)
+        self.fc_1 = nn.Linear(16 * (self.img_size // 8) * (self.img_size // 8), 1024)
         self.fc_2 = nn.Linear(1024, self.num_classes)
     
     def forward(self, x):
@@ -193,3 +200,32 @@ class CNN2(nn.Module):
         x = self.fc_1(x)
         x = self.fc_2(x)
         return F.log_softmax(x, dim=1)
+
+
+class Resnet(nn.Module):
+    def __init__(self, pretrained: bool = False):
+        super(Resnet, self).__init__()
+        model = resnet101()
+    
+        if pretrained:
+            model.load_state_dict( ResNet101_Weights.IMAGENET1K_V2.get_state_dict(progress=True) )
+        
+        self.out_channels = model.fc.in_features
+        self.backbone = nn.Sequential( *list(model.children())[:-1] )
+        last = nn.Linear(self.out_channels, 17)
+        last.apply(self._he_init)
+        self.last = last
+    
+
+    def _he_init(self, m: nn.Module):
+        if isinstance(m, nn.Linear):
+            nn.init.kaiming_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.backbone(x)
+        x = x.view(-1, self.out_channels)
+        x = self.last(x)
+        return F.log_softmax(x, dim=1)
+    
