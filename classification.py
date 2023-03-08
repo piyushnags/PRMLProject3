@@ -358,8 +358,8 @@ def resnet_main(args):
     augment = transforms.Compose(augmentation)
     train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
 
     print(f"Training on {len(train_dataset)} images, testing on {len(test_dataset)} images.")
