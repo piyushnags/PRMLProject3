@@ -377,7 +377,8 @@ def resnet_main(args: Any):
     model = Resnet(pretrained=True).to(device)
 
     # Freeze backbone for transfer learning
-    for child in list( model.children() )[:-1]:
+    # and leave a few unfrozen layers for finetuning
+    for child in list( model.children() )[0][:-2]:
         for param in child.parameters():
             param.requires_grad_(False)
 
@@ -426,6 +427,7 @@ if __name__ == '__main__':
         evaluate_model(model, args)
     elif args.resnet:
         resnet_main(args)
+        visualize(args, dataset='Wallpaper')
         plot_training_curve(args)
     else:
         if args.dataset == 'Wallpaper':
