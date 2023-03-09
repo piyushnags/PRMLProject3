@@ -15,7 +15,7 @@ file that you add code to.)
 import os
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 from tqdm import tqdm
@@ -162,8 +162,12 @@ def wallpaper_main(args):
 
     # Compose the transforms that will be applied to the images. Feel free to adjust this.
     transform = transforms.Compose(preprocess)
-    augment = transforms.Compose(augmentation)
-    train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
+    train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=transform)
+    if args.aug_train:
+        augment = transforms.Compose(augmentation)
+        aug_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
+        datasets = [train_dataset, aug_dataset]
+        train_dataset = ConcatDataset(datasets)
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
