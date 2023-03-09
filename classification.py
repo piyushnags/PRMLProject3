@@ -154,7 +154,7 @@ def wallpaper_main(args):
         augmentation = [
             transforms.RandomRotation(degrees=(0, 360)),
             transforms.RandomCrop(size=(args.img_size, args.img_size)),
-            transforms.RandomHorizontalFlip(),
+            # transforms.RandomHorizontalFlip(),
             transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
         ]
         augmentation = preprocess + augmentation
@@ -165,8 +165,8 @@ def wallpaper_main(args):
     augment = transforms.Compose(augmentation)
     train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
 
     print(f"Training on {len(train_dataset)} images, testing on {len(test_dataset)} images.")
