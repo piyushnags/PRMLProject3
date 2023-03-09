@@ -491,6 +491,8 @@ def densenet_main(args: Any):
         last_dense_block.denselayer9, last_dense_block.denselayer10,
         last_dense_block.denselayer11, last_dense_block.denselayer12,
         last_dense_block.denselayer13,
+        # Less tuning:
+        last_dense_block.denselayer14, last_dense_block.denselayer15
     ]
     for layer in freeze_layers:
         for param in list( layer.parameters() ):
