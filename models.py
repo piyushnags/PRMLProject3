@@ -7,8 +7,8 @@ TA: Shimian Zhang, 2023
 Your Details: (The below details should be included in every python 
 file that you add code to.)
 {
-    Name:
-    PSU Email ID:
+    Name: Piyush Nagasubramaniam
+    PSU Email ID: pvn5119@psu.edu
     Description: (A short description of what each of the functions you've written does.).
 }
 '''
@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torchvision.models import resnet101, ResNet101_Weights
+from torchvision.models import resnet101, ResNet101_Weights, densenet121, DenseNet121_Weights
 from torch import Tensor
 
 # TODO: Can the MLP be improved?
@@ -229,3 +229,34 @@ class Resnet(nn.Module):
         x = self.last(x)
         return F.log_softmax(x, dim=1)
     
+
+class Densenet(nn.Module):
+    def __init__(self, pretrained: bool = False):
+        super(Densenet, self).__init__()
+        model = densenet121()
+
+        if pretrained:
+            state_dict = DenseNet121_Weights.DEFAULT.get_state_dict(progress=True)
+            for key in list(state_dict.keys()):
+                state_dict[key.replace('.1.', '1.'). replace('.2.', '2.')] = state_dict.pop(key)
+            model.load_state_dict(state_dict) 
+        
+        self.out_channels = model.classifier.in_features
+        self.backbone = nn.Sequential( *list(model.children())[:-1] )
+        last = nn.Linear(self.out_channels, 17)
+        last.apply(self._xavier_init)
+        self.last = last
+    
+
+    def _xavier_init(self, m: nn.Module):
+        if isinstance(m, nn.Linear):
+            nn.init.xavier_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.backbone(x)
+        x = x.view(-1, self.out_channels)
+        x = self.last(x)
+        return F.log_softmax(x, dim=1)
+

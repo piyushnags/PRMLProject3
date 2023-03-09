@@ -63,7 +63,8 @@ def arg_parse():
     parser.add_argument('--eval_ckpt', action='store_true', help='Uses checkpoint instead of model pth file')
 
     # Training Resnet Network
-    parser.add_argument('--resnet', action='store_true', help='Train pretrained resnet classifier')  
+    parser.add_argument('--resnet', action='store_true', help='Train pretrained resnet classifier')
+    parser.add_argument('--densenet', action='store_true', help='Train pretrained densenet classifier')  
 
     return parser.parse_args()
 
