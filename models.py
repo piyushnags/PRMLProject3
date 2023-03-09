@@ -243,7 +243,7 @@ class Densenet(nn.Module):
         
         self.out_channels = model.classifier.in_features
         self.backbone = nn.Sequential( *list(model.children())[:-1] )
-        last = nn.Linear(self.out_channels*10*10, 17)
+        last = nn.Linear(self.out_channels*7*7, 17)
         last.apply(self._xavier_init)
         self.last = last
     
