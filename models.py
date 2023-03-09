@@ -256,8 +256,6 @@ class Densenet(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.backbone(x)
-        print(x.shape)
         x = x.view(x.size(0), -1)
         x = self.last(x)
         return F.log_softmax(x, dim=1)
-
