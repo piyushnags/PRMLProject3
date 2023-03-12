@@ -582,7 +582,7 @@ def mobilenet_main(args: Any):
     print(f"Training on {len(train_dataset)} images, testing on {len(test_dataset)} images.")
     # Initialize the model, optimizer, and loss function
     model = Mobilenet(pretrained=True).to(device)
-    for param in ( list( model.children() )[:-1][0][0][:-1] ).parameters():
+    for param in ( list( model.children() )[:-1][0][0][:-3] ).parameters():
         param.requires_grad_(False)
 
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)

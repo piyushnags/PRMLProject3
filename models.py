@@ -302,9 +302,9 @@ class Mobilenet(nn.Module):
 
 if __name__ == '__main__':
     model = Mobilenet(True)
-    # print( list(model.children())[:-1][0][0][:-1] )
+    # print( list(model.children())[:-1][0][0][:-3] )
     # i = 0
-    for param in list(model.children())[:-1][0][0][:-1].parameters():
+    for param in list(model.children())[:-1][0][0][:-3].parameters():
         param.requires_grad_(False)
     # print(i)
 
