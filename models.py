@@ -17,7 +17,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torchvision.models import resnet101, ResNet101_Weights, densenet121, DenseNet121_Weights
+from torchvision.models import (
+    resnet101, ResNet101_Weights, 
+    densenet121, DenseNet121_Weights,
+    mobilenet_v3_small, MobileNet_V3_Small_Weights
+)
 from torch import Tensor
 
 # TODO: Can the MLP be improved?
@@ -264,3 +268,45 @@ class Densenet(nn.Module):
         x = x.view(-1, self.out_channels)
         x = self.last(x)
         return F.log_softmax(x, dim=1)
+
+
+class Mobilenet(nn.Module):
+    def __init__(self, pretrained:bool = False):
+        super(Mobilenet, self).__init__()
+        model = mobilenet_v3_small()
+
+        if pretrained:
+            state_dict = MobileNet_V3_Small_Weights.IMAGENET1K_V1.get_state_dict(progress=True)
+            model.load_state_dict(state_dict)
+        
+        self.out_channels = model.classifier[0].in_features
+        self.backbone = nn.Sequential( *list(model.children())[:-1] )
+        classifier = nn.Linear(self.out_channels, 17)
+        classifier.apply(self._he_init_)
+        self.classifier = classifier
+    
+
+    def _he_init_(self, m: nn.Module):
+        if isinstance(m, nn.Linear):
+            nn.init.kaiming_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+
+    
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.backbone(x)
+        x = x.view(-1, self.out_channels)
+        x = self.classifier(x)
+        return F.log_softmax(x, dim=1)
+        
+        
+
+if __name__ == '__main__':
+    model = Mobilenet(True)
+    # print( list(model.children())[:-1][0][0][:-1] )
+    # i = 0
+    for param in list(model.children())[:-1][0][0][:-1].parameters():
+        param.requires_grad_(False)
+    # print(i)
+
+    trainable = [ p for p in model.parameters() if p.requires_grad ]
+    print(len(trainable))

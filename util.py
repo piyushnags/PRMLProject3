@@ -62,9 +62,13 @@ def arg_parse():
     parser.add_argument('--model_type', type=str, default='CNN2', help='name of model architecture to be evaluated')
     parser.add_argument('--eval_ckpt', action='store_true', help='Uses checkpoint instead of model pth file')
 
-    # Training Resnet Network
+    # Training Pretrained Networks
     parser.add_argument('--resnet', action='store_true', help='Train pretrained resnet classifier')
-    parser.add_argument('--densenet', action='store_true', help='Train pretrained densenet classifier')  
+    parser.add_argument('--densenet', action='store_true', help='Train pretrained densenet classifier')
+    parser.add_argument('--mobilenet', action='store_true', help='Train pretrained mobilnetv3 (small) classifier')  
+    
+    
+
 
     return parser.parse_args()
 
