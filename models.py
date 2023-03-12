@@ -243,8 +243,12 @@ class Densenet(nn.Module):
         
         self.out_channels = model.classifier.in_features
         self.backbone = nn.Sequential( *list(model.children())[:-1] )
-        last = nn.Linear(self.out_channels*7*7, 17)
+        avg_pool = nn.AdaptiveAvgPool2d((1,1))
+        last = nn.Linear(self.out_channels, 17)
+
+        avg_pool.apply(self._xavier_init)
         last.apply(self._xavier_init)
+        self.avg_pool = avg_pool
         self.last = last
     
 
@@ -256,6 +260,7 @@ class Densenet(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.backbone(x)
-        x = x.view(x.size(0), -1)
+        x = self.avg_pool(x)
+        x = x.view(-1, self.out_channels)
         x = self.last(x)
         return F.log_softmax(x, dim=1)

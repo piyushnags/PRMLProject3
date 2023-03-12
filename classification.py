@@ -478,11 +478,11 @@ def densenet_main(args: Any):
 
     # Freeze backbone for transfer learning
     # and leave a few unfrozen layers for finetuning
-    for child in list(model.children())[:-1][0][0][:-1]:
+    for child in list(model.children())[:-2][0][0][:-2]:
         for param in child.parameters():
             param.requires_grad_(False)
     
-    last_dense_block = list(model.children())[:-1][0][0][:-1][-1]
+    last_dense_block = list(model.children())[:-2][0][0][:-1][-1]
     freeze_layers = [
         last_dense_block.denselayer1, last_dense_block.denselayer2, 
         last_dense_block.denselayer3, last_dense_block.denselayer4,
