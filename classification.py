@@ -596,7 +596,7 @@ def mobilenet_main(args: Any):
     #     param.requires_grad_(False)
 
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-5)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
     criterion = nn.CrossEntropyLoss()
 
     # Train + test the model
