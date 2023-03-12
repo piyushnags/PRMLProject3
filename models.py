@@ -301,12 +301,12 @@ class Mobilenet(nn.Module):
         
 
 if __name__ == '__main__':
-    model = Mobilenet(True)
-    # print( list(model.children())[:-1][0][0][:-3] )
+    model = Mobilenet()
+    # print( list(model.children())[:-1][0][0][:-4] )
     # i = 0
-    for param in list(model.children())[:-1][0][0][:-3].parameters():
+    for param in list(model.children())[:-1][0][0][:-4].parameters():
         param.requires_grad_(False)
-    # print(i)
+    # # print(i)
 
     trainable = [ p for p in model.parameters() if p.requires_grad ]
     print(len(trainable))
