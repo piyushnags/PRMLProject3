@@ -304,7 +304,7 @@ def evaluate_model(model: nn.Module, args: Any):
             transforms.ToTensor(),
             transforms.Normalize((0.5, ), (0.5, )),
         ]
-    elif args.model_type == 'Resnet':
+    elif args.model_type == 'Resnet' or args.model_type == 'Densenet':
         preprocess = [
             transforms.Resize((224, 224)),
             transforms.Grayscale(num_output_channels=3),
@@ -539,6 +539,8 @@ if __name__ == '__main__':
             model = CNN2(input_channels=1, img_size=args.img_size, num_classes=17)
         elif args.model_type == 'Resnet':
             model = Resnet()
+        elif args.model_type == 'Densenet':
+            model = Densenet()
         else:
             raise ValueError('{} model not supported, please try Resnet/CNN2'.format(args.model_type))
         evaluate_model(model, args)
