@@ -777,6 +777,10 @@ if __name__ == '__main__':
         else:
             raise ValueError('{} model not supported, please try Resnet/CNN2'.format(args.model_type))
         evaluate_model(model, args)
+    elif args.resume_training:
+        model, per_epoch_loss, per_epoch_acc, preds, targets = resume_training(args)
+        model_dir = os.path.join( args.save_dir, 'cnn.pth' )
+        torch.save(model.state_dict(), model_dir)
     elif args.resnet:
         resnet_main(args)
         visualize(args, dataset='Wallpaper')
@@ -789,10 +793,6 @@ if __name__ == '__main__':
         mobilenet_main(args)
         visualize(args, dataset='Wallpaper')
         plot_training_curve(args)
-    elif args.resume_training:
-        model, per_epoch_loss, per_epoch_acc, preds, targets = resume_training(args)
-        model_dir = os.path.join( args.save_dir, 'cnn.pth' )
-        torch.save(model.state_dict(), model_dir)
     else:
         if args.dataset == 'Wallpaper':
             if args.train:
