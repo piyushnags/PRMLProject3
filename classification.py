@@ -368,7 +368,7 @@ def resume_training(args):
     if scheduler_state_dict is not None:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
         scheduler.load_state_dict(scheduler_state_dict)
-    start_epoch = ckpt['epoch']
+    start_epoch = ckpt['epoch'] + 1
     end_epoch = start_epoch + args.num_epochs
     per_epoch_loss = ckpt['per_epoch_loss']
     per_epoch_acc = ckpt['per_epoch_acc']
@@ -449,8 +449,8 @@ def resume_training(args):
         if scheduler is not None:
             scheduler.step()
 
-        print('Epoch: {}, Loss: {}, Acc: {}'.format(epoch+1, train_loss, train_acc))
-        if (epoch+1) % args.log_interval == 0:            
+        print('Epoch: {}, Loss: {}, Acc: {}'.format(epoch, train_loss, train_acc))
+        if (epoch) % args.log_interval == 0:            
             # Save Checkpoints every log_interval epochs
             if args.log_dir is not None:
                 if not os.path.exists(args.log_dir):
@@ -465,7 +465,7 @@ def resume_training(args):
                 torch.save({
                     "model_state_dict":model.state_dict(),
                     "optimizer_state_dict":optimizer.state_dict(),
-                    "epoch":epoch,
+                    "epoch":epoch - 1,
                     "per_epoch_loss":per_epoch_loss,
                     "per_epoch_acc":per_epoch_acc,
                     "scheduler_state_dict":scheduler_val
