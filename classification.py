@@ -455,7 +455,7 @@ def resume_training(args):
             if args.log_dir is not None:
                 if not os.path.exists(args.log_dir):
                     os.makedirs(args.log_dir)
-                ckpt_path = os.path.join(args.log_dir, 'ckpt_{}.ckpt'.format(epoch+1))
+                ckpt_path = os.path.join(args.log_dir, 'ckpt_{}.ckpt'.format(epoch))
                 
                 if scheduler is not None:
                     scheduler_val = scheduler.state_dict()
