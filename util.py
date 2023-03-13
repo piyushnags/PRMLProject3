@@ -67,8 +67,8 @@ def arg_parse():
     parser.add_argument('--densenet', action='store_true', help='Train pretrained densenet classifier')
     parser.add_argument('--mobilenet', action='store_true', help='Train pretrained mobilnetv3 (small) classifier')  
     
-    
-
+    # Resume Training
+    parser.add_argument('--resume_training', action='store_true', help='Resume training from checkpoint')
 
     return parser.parse_args()
 

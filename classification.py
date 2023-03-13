@@ -341,6 +341,140 @@ def evaluate_model(model: nn.Module, args: Any):
     print(f'Test accuracy: {test_acc*100:.3f}')
 
 
+def resume_training(args):
+    if not os.path.exists(args.ckpt_path):
+        raise ValueError('Path {} does not exist!!'.format(args.ckpt_path))
+    ckpt = torch.load(args.ckpt_path)
+
+    if args.device == 'cuda':
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device('cpu')
+    
+    if args.model_type == 'Resnet':
+        model = Resnet().to(device)
+    elif args.model_type == 'Densenet':
+        model = Densenet().to(device)
+    elif args.model_type == 'Mobilenet':
+        model = Mobilenet().to(device)
+    else:
+        raise ValueError('Invalid model type!')
+
+    model.load_state_dict( ckpt['model_state_dict'] )
+    optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
+    optimizer.load_state_dict( ckpt['optimizer_state_dict'] )
+    scheduler_state_dict = ckpt['scheduler_state_dict']
+    scheduler = None
+    if scheduler_state_dict is not None:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
+        scheduler.load_state_dict(scheduler_state_dict)
+    start_epoch = ckpt['epoch']
+    end_epoch = start_epoch + args.num_epochs
+    per_epoch_loss = ckpt['per_epoch_loss']
+    per_epoch_acc = ckpt['per_epoch_acc']
+
+    # Load the wallpaper dataset
+    data_root = os.path.join(args.data_root, 'Wallpaper')
+    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
+        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
+
+    # Seed torch and numpy
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    
+    if args.model_type == 'CNN2':
+        preprocess = [
+            transforms.Resize((args.img_size, args.img_size)),
+            transforms.Grayscale(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, ), (0.5, )),
+        ]
+    elif args.model_type == 'Resnet' or args.model_type == 'Densenet' or args.model_type == 'Mobilenet':
+        preprocess = [
+            transforms.Resize((224, 224)),
+            transforms.Grayscale(num_output_channels=3),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    
+    augmentation = [
+        transforms.RandomRotation(degrees=(0, 360)),
+        transforms.RandomCrop(size=(224, 224)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
+    ]
+    augmentation = preprocess + augmentation
+
+
+    # Compose the transforms that will be applied to the images. Feel free to adjust this.
+    transform = transforms.Compose(preprocess)
+    augment = transforms.Compose(augmentation)
+    train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=transform)
+    aug_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
+    datasets = [train_dataset, aug_dataset]
+    train_dataset = ConcatDataset(datasets)
+    test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
+
+    criterion = nn.CrossEntropyLoss()
+    
+    model.train()
+    for epoch in range(start_epoch, end_epoch+1):
+        train_loss = 0
+        preds = []
+        targets = []
+        correct = 0
+        for batch_idx, (data, target) in enumerate(tqdm(train_loader)):
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
+
+            # Get the accuracy
+            pred = output.argmax(dim=1)
+            correct += pred.eq(target).sum().item()
+
+            # Save the predictions and targets if it's the last epoch
+            if epoch == args.num_epochs - 1:
+                preds.append(pred.cpu().numpy())
+                targets.append(target.cpu().numpy())
+        train_loss /= len(train_loader)
+        train_acc = correct / len(train_loader.dataset)
+        per_epoch_acc.append(train_acc)
+
+        if scheduler is not None:
+            scheduler.step()
+
+        print('Epoch: {}, Loss: {}, Acc: {}'.format(epoch+1, train_loss, train_acc))
+        if (epoch+1) % args.log_interval == 0:            
+            # Save Checkpoints every log_interval epochs
+            if args.log_dir is not None:
+                if not os.path.exists(args.log_dir):
+                    os.makedirs(args.log_dir)
+                ckpt_path = os.path.join(args.log_dir, 'ckpt_{}.ckpt'.format(epoch+1))
+                
+                if scheduler is not None:
+                    scheduler_val = scheduler.state_dict()
+                else:
+                    scheduler_val = None
+                
+                torch.save({
+                    "model_state_dict":model.state_dict(),
+                    "optimizer_state_dict":optimizer.state_dict(),
+                    "epoch":epoch,
+                    "per_epoch_loss":per_epoch_loss,
+                    "per_epoch_acc":per_epoch_acc,
+                    "scheduler_state_dict":scheduler_val
+                }, ckpt_path)
+
+    preds = np.concatenate(preds)
+    targets = np.concatenate(targets)
+    return model, np.array(per_epoch_loss), np.array(per_epoch_acc), preds, targets        
+
 
 # ------------------------------------- Extra Credit Implementation ---------------------------------------------------
 def resnet_main(args: Any):
@@ -655,6 +789,10 @@ if __name__ == '__main__':
         mobilenet_main(args)
         visualize(args, dataset='Wallpaper')
         plot_training_curve(args)
+    elif args.resume_training:
+        model, per_epoch_loss, per_epoch_acc, preds, targets = resume_training(args)
+        model_dir = os.path.join( args.save_dir, 'cnn.pth' )
+        torch.save(model.state_dict(), model_dir)
     else:
         if args.dataset == 'Wallpaper':
             if args.train:
