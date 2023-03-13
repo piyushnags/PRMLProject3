@@ -342,9 +342,9 @@ def evaluate_model(model: nn.Module, args: Any):
 
 
 def resume_training(args):
-    if not os.path.exists(args.ckpt_path):
-        raise ValueError('Path {} does not exist!!'.format(args.ckpt_path))
-    ckpt = torch.load(args.ckpt_path)
+    if not os.path.exists(args.model_path):
+        raise ValueError('Path {} does not exist!!'.format(args.model_path))
+    ckpt = torch.load(args.model_path)
 
     if args.device == 'cuda':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
