@@ -365,12 +365,27 @@ def resume_training(args):
         raise ValueError('Invalid model type!')
 
     model.load_state_dict( ckpt['model_state_dict'] )
-    optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
+    
+    
+    # optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
+    
+    # Google's Training Recipe
+    optimizer = torch.optim.RMSprop( 
+        [p for p in model.parameters() if p.requires_grad], 
+        lr=args.lr, 
+        momentum=0.9,
+        weight_decay=1e-5,
+        eps=0.0316,
+        alpha=0.9
+        )
     optimizer.load_state_dict( ckpt['optimizer_state_dict'] )
+    
+    
     scheduler_state_dict = ckpt['scheduler_state_dict']
     scheduler = None
     if scheduler_state_dict is not None:
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
+        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.973)
         scheduler.load_state_dict(scheduler_state_dict)
     start_epoch = ckpt['epoch'] + 1
     end_epoch = start_epoch + args.num_epochs
