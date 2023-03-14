@@ -62,6 +62,7 @@ def arg_parse():
     parser.add_argument('--model_path', type=str, default='', help='Path to model weights after training')
     parser.add_argument('--model_type', type=str, default='CNN2', help='name of model architecture to be evaluated')
     parser.add_argument('--eval_ckpt', action='store_true', help='Uses checkpoint instead of model pth file')
+    parser.add_argument('--maps', action='store_true', help='Enables feature map support')
 
     # Training Pretrained Networks
     parser.add_argument('--resnet', action='store_true', help='Train pretrained resnet classifier')
