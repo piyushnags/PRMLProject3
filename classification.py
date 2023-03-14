@@ -805,10 +805,10 @@ def visualize_maps(args: Any, model: nn.Module):
             activation[name] = output.detach()
         return hook
     
-    model.fc_2.register_forward_hook(get_activation('fc_2'))
+    model.conv_layers[4].register_forward_hook(get_activation('fc_2'))
     evaluate_model(model, args)
     
-    print(activation['fc_2'].size())
+    print(activation['conv'].size())
 
 
 
