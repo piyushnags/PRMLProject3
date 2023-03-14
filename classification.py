@@ -819,9 +819,9 @@ def visualize_maps(args: Any, model: nn.Module):
     # TODO: Augment the training data given the transforms in the assignment description.
     preprocess = [
         transforms.Resize((224, 224)),
-        transforms.Grayscale(num_output_channels=3),
+        transforms.Grayscale(),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        transforms.Normalize((0.5,), (0.5,)),
     ]
     augmentation = [
         transforms.RandomRotation(degrees=(0, 360)),
@@ -837,9 +837,14 @@ def visualize_maps(args: Any, model: nn.Module):
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=augment)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
     
+    img = None
+    for i, t in test_loader:
+        img = i
+        break
+    
     model.eval()
     with torch.no_grad():
-        x = model( test_loader[0] )
+        x = model( img )
     
     print(activation['fc_2'])
 
@@ -847,7 +852,7 @@ def visualize_maps(args: Any, model: nn.Module):
 
 if __name__ == '__main__':
     args = arg_parse()
-
+    
     if args.test_model:
         if args.model_type == 'CNN2':
             model = CNN2(input_channels=1, img_size=args.img_size, num_classes=17)
@@ -860,6 +865,16 @@ if __name__ == '__main__':
         else:
             raise ValueError('{} model not supported, please try Resnet/CNN2'.format(args.model_type))
         evaluate_model(model, args)
+    
+    elif args.maps:
+        if args.device == 'cuda':
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        else:
+            device = torch.device('cpu')
+        model = CNN2(input_channels=1, img_size=args.img_size, num_classes=17)
+        model.load_state_dict( torch.load(args.model_path, map_location=device) )
+        visualize_maps(args, model)
+    
     elif args.resume_training:
         model, per_epoch_loss, per_epoch_acc, preds, targets = resume_training(args)
         model_dir = os.path.join( args.save_dir, 'cnn.pth' )
@@ -887,8 +902,3 @@ if __name__ == '__main__':
                 taiji_main(args)
             visualize(args, dataset='Taiji')
             plot_training_curve(args)
-
-    if args.maps:
-        model = CNN2()
-        model.load_state_dict( torch.load(args.model_path) )
-        visualize_maps(args, model)
