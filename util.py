@@ -19,6 +19,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.manifold import TSNE
 
 
 import torch

@@ -791,6 +791,59 @@ def mobilenet_main(args: Any):
         torch.save(model.state_dict(), model_dir) 
 
 
+def visualize_maps(args: Any, model: nn.Module):
+    # Initialize dir for saving maps
+    save_dir = os.path.join(args.save_dir, 'feature_maps')
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # Dictionary to store feature maps
+    activation = {} 
+
+    def get_activation(name):
+        def hook(model, input, output):
+            activation[name] = output.detach()
+        return hook
+    
+    model.fc_2.register_forward_hook(get_activation('fc_2'))
+
+    # Load the wallpaper dataset
+    data_root = os.path.join(args.data_root, 'Wallpaper')
+    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
+        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
+
+    # Seed torch and numpy
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
+    # TODO: Augment the training data given the transforms in the assignment description.
+    preprocess = [
+        transforms.Resize((224, 224)),
+        transforms.Grayscale(num_output_channels=3),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ]
+    augmentation = [
+        transforms.RandomRotation(degrees=(0, 360)),
+        transforms.RandomCrop(size=(224, 224)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
+    ]
+    augmentation = preprocess + augmentation
+
+
+    # Compose the transforms that will be applied to the images. Feel free to adjust this.
+    augment = transforms.Compose(augmentation)
+    test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=augment)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
+    
+    model.eval()
+    with torch.no_grad():
+        x = model( test_loader[0] )
+    
+    print(activation['fc_2'])
+
+
 
 if __name__ == '__main__':
     args = arg_parse()
@@ -835,3 +888,7 @@ if __name__ == '__main__':
             visualize(args, dataset='Taiji')
             plot_training_curve(args)
 
+    if args.maps:
+        model = CNN2()
+        model.load_state_dict( torch.load(args.model_path) )
+        visualize_maps(args, model)
