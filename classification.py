@@ -807,44 +807,45 @@ def visualize_maps(args: Any, model: nn.Module):
     
     model.fc_2.register_forward_hook(get_activation('fc_2'))
 
-    # Load the wallpaper dataset
-    data_root = os.path.join(args.data_root, 'Wallpaper')
-    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
-        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
+    # # Load the wallpaper dataset
+    # data_root = os.path.join(args.data_root, 'Wallpaper')
+    # if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
+    #     os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
 
-    # Seed torch and numpy
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
+    # # Seed torch and numpy
+    # torch.manual_seed(args.seed)
+    # np.random.seed(args.seed)
 
-    # TODO: Augment the training data given the transforms in the assignment description.
-    preprocess = [
-        transforms.Resize((224, 224)),
-        transforms.Grayscale(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,)),
-    ]
-    augmentation = [
-        transforms.RandomRotation(degrees=(0, 360)),
-        transforms.RandomCrop(size=(224, 224)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
-    ]
-    augmentation = preprocess + augmentation
+    # # TODO: Augment the training data given the transforms in the assignment description.
+    # preprocess = [
+    #     transforms.Resize((224, 224)),
+    #     transforms.Grayscale(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.5,), (0.5,)),
+    # ]
+    # augmentation = [
+    #     transforms.RandomRotation(degrees=(0, 360)),
+    #     transforms.RandomCrop(size=(224, 224)),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.RandomAffine(degrees=0, translate=(0.3, 0.3), scale=(1,2)),
+    # ]
+    # augmentation = preprocess + augmentation
 
 
-    # Compose the transforms that will be applied to the images. Feel free to adjust this.
-    augment = transforms.Compose(augmentation)
-    test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=augment)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
+    # # Compose the transforms that will be applied to the images. Feel free to adjust this.
+    # augment = transforms.Compose(augmentation)
+    # test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=augment)
+    # test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
     
-    img = None
-    for i, t in test_loader:
-        img = i
-        break
+    # img = None
+    # for i, t in test_loader:
+    #     img = i
+    #     break
     
-    model.eval()
-    with torch.no_grad():
-        x = model( img )
+    # model.eval()
+    # with torch.no_grad():
+    #     x = model( img )
+    evaluate_model(model, args)
     
     print(activation['fc_2'])
 
