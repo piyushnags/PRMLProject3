@@ -792,23 +792,74 @@ def mobilenet_main(args: Any):
 
 
 def visualize_maps(args: Any, model: nn.Module):
-    # Initialize dir for saving maps
-    save_dir = os.path.join(args.save_dir, 'feature_maps')
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
     # Dictionary to store feature maps
-    activation = {} 
+    activation = [] 
 
-    def get_activation(name):
+    def get_activation():
         def hook(model, input, output):
-            activation[name] = output.detach()
+            activation.append(output.detach()) 
         return hook
     
-    model.conv_layers[4].register_forward_hook(get_activation('conv'))
-    evaluate_model(model, args)
+    model.conv_layers[4].register_forward_hook(get_activation())
+
+    if args.device == 'cuda':
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device('cpu')
     
-    print(activation['conv'].size())
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
+    data_root = os.path.join(args.data_root, 'Wallpaper')
+    if not os.path.exists(os.path.join(args.save_dir, 'Wallpaper', args.test_set)):
+        os.makedirs(os.path.join(args.save_dir, 'Wallpaper', args.test_set))
+
+    preprocess = [
+        transforms.Resize((args.img_size, args.img_size)),
+        transforms.Grayscale(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, ), (0.5, )),
+    ]
+
+    transform = transforms.Compose(preprocess)
+    test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
+
+    imgs = [ test_dataset[i][0] for i in range(0, 3400, 200) ]
+    titles = [
+        'CM', 'CMM', 'P1', 'P2', 'P3', 'P3M1', 'P4', 'P4G',
+        'P4M', 'P6', 'P6M', 'P3M1', 'PG', 'PGG', 'PM', 'PMG',
+        'PMM',
+    ]
+    
+    fig = plt.figure( figsize=(15,15) )
+    for (i, img), title in zip(enumerate(imgs), titles):
+        ax = fig.add_subplot(4, 5, i+1)
+        ax.axis('off')
+        ax.set_title(title)
+        ax.imshow(img.permute(1,2,0))
+    plt.savefig(os.path.join(args.save_dir, 'sample_imgs.png'), dpi='figure')    
+    
+    model.to(device)
+    model.load_state_dict( torch.load(args.model_path, map_location=device) )
+    model.eval()
+
+    input_batch = imgs[0].unsqueeze(0)
+    for i in range(1, len(imgs)):
+        input_batch = torch.cat( (input_batch, img.unsqueeze(0)) )
+
+    with torch.no_grad():
+        x = model(input_batch)
+    
+    fig = plt.figure( figsize=(15,15) )
+    for i, title in zip(range(17), titles):
+        feat_map = activation[0][i]
+        ax = fig.add_subplot(4, 5, i+1)
+        ax.axis('off')
+        ax.set_title(title)
+        ax.imshow(feat_map[0], cmap='gray')
+
+    plt.savefig( os.path.join(args.save_dir, 'feat_maps.png'), dpi='figure' )
+    plt.show()
 
 
 
