@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 
 
 import torch
@@ -247,6 +248,7 @@ def visualize(args, dataset):
     # Overall per class training data. Tilt the x-axis labels by 45 degrees
     overall_train_mat = overall_results['overall_train_mat']
     overall_per_class_train = overall_train_mat.diagonal()
+    print("Training Std: {:.4f}".format( np.std(overall_per_class_train) ))
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.bar(np.arange(num_classes), overall_per_class_train)
     ax.set_ylabel('Accuracy')
@@ -261,6 +263,7 @@ def visualize(args, dataset):
     # Overall per class testing data
     overall_test_mat = overall_results['overall_test_mat']
     overall_per_class_test = overall_test_mat.diagonal()
+    print("Testing Std: {:.4f}".format( np.std(overall_per_class_test) ))
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.bar(np.arange(num_classes), overall_per_class_test)
     ax.set_ylabel('Accuracy')
