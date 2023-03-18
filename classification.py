@@ -354,9 +354,17 @@ def resume_training(args):
     if args.model_type == 'Resnet':
         model = Resnet().to(device)
         # Need to freeze model layers before loading optimizer state dict
-        for child in list( model.children() )[0][:-2][-1][:-4]:
+        # for child in list( model.children() )[0][:-2][-1][:-4]:
+        #     for param in child.parameters():
+        #         param.requires_grad_(False)
+
+        for child in list( model.children() )[0][:-1][:-2]:
             for param in child.parameters():
                 param.requires_grad_(False)
+
+        for param in list(model.children())[0][:-1][:-1][-1][:-5].parameters():
+            param.requires_grad_(False)
+
     elif args.model_type == 'Densenet':
         model = Densenet().to(device)
     elif args.model_type == 'Mobilenet':

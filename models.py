@@ -307,11 +307,11 @@ class Mobilenet(nn.Module):
         
 
 if __name__ == '__main__':
-    # model = Mobilenet()
-    # trainable = sum([ p.numel() for p in model.parameters() if p.requires_grad ])
-    # print("Number of trainable parameters in Mobilenet Small (full): {}".format(trainable))
+    model = Mobilenet()
+    trainable = sum([ p.numel() for p in model.parameters() if p.requires_grad ])
+    print("Number of trainable parameters in Mobilenet Small (full): {}".format(trainable))
 
-    # del model
+    del model
     model = Resnet(pretrained=True)
     for child in list( model.children() )[0][:-1][:-2]:
         for param in child.parameters():
@@ -323,27 +323,27 @@ if __name__ == '__main__':
     trainable = sum([p.numel() for p in model.parameters() if p.requires_grad])
     print("Number of trainable parameters in Resnet (finetuning): {}".format(trainable))
 
-    # del model
-    # model = Densenet(pretrained=True)
-    # for child in list(model.children())[:-2][0][0][:-2]:
-    #     for param in child.parameters():
-    #         param.requires_grad_(False)
+    del model
+    model = Densenet(pretrained=True)
+    for child in list(model.children())[:-2][0][0][:-2]:
+        for param in child.parameters():
+            param.requires_grad_(False)
     
-    # last_dense_block = list(model.children())[:-2][0][0][:-1][-1]
-    # freeze_layers = [
-    #     last_dense_block.denselayer1, last_dense_block.denselayer2, 
-    #     last_dense_block.denselayer3, last_dense_block.denselayer4,
-    #     last_dense_block.denselayer5, last_dense_block.denselayer6,
-    #     last_dense_block.denselayer7, last_dense_block.denselayer8, 
-    #     last_dense_block.denselayer9, last_dense_block.denselayer10,
-    #     last_dense_block.denselayer11, last_dense_block.denselayer12,
-    #     last_dense_block.denselayer13,
-    #     # Less tuning:
-    #     last_dense_block.denselayer14, last_dense_block.denselayer15
-    # ]
-    # for layer in freeze_layers:
-    #     for param in list( layer.parameters() ):
-    #         param.requires_grad_(False)
+    last_dense_block = list(model.children())[:-2][0][0][:-1][-1]
+    freeze_layers = [
+        last_dense_block.denselayer1, last_dense_block.denselayer2, 
+        last_dense_block.denselayer3, last_dense_block.denselayer4,
+        last_dense_block.denselayer5, last_dense_block.denselayer6,
+        last_dense_block.denselayer7, last_dense_block.denselayer8, 
+        last_dense_block.denselayer9, last_dense_block.denselayer10,
+        last_dense_block.denselayer11, last_dense_block.denselayer12,
+        last_dense_block.denselayer13,
+        # Less tuning:
+        last_dense_block.denselayer14, last_dense_block.denselayer15
+    ]
+    for layer in freeze_layers:
+        for param in list( layer.parameters() ):
+            param.requires_grad_(False)
     
-    # trainable = sum( [p.numel() for p in model.parameters()] )
-    # print( "Number of trainable parameters in Densenet (finetuning): {}".format(trainable) )
+    trainable = sum( [p.numel() for p in model.parameters()] )
+    print( "Number of trainable parameters in Densenet (finetuning): {}".format(trainable) )
