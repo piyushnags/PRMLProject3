@@ -35,6 +35,7 @@ class MLP(nn.Module):
         """
         super(MLP, self).__init__()
 
+        # Baseline Architecture
         self.layers = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.Linear(hidden_dim, hidden_dim),
@@ -91,7 +92,7 @@ class CNN(nn.Module):
         self.num_classes = num_classes
         self.img_size = img_size
         
-        # Basic Arch
+        # Baseline Architecture
         self.conv_layers= nn.Sequential(
             nn.Conv2d(self.input_channels, 32, kernel_size=3, padding=1),
             nn.ReLU(), 
@@ -178,6 +179,7 @@ class CNN2(nn.Module):
         self.num_classes = num_classes
         self.img_size = img_size
 
+        # Modified CNN Architecture 2
         self.conv_layers = nn.Sequential(
             nn.Conv2d(self.input_channels, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64, eps=1e-7, momentum=0.1, affine=True, track_running_stats=True),

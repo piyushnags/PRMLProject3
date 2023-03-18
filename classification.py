@@ -160,6 +160,8 @@ def wallpaper_main(args):
         transforms.ToTensor(),
         transforms.Normalize((0.5, ), (0.5, )),
     ]
+    
+    # Add augmentation
     if args.aug_train:
         augmentation = [
             transforms.RandomRotation(degrees=(0, 360)),
@@ -173,6 +175,8 @@ def wallpaper_main(args):
     # Compose the transforms that will be applied to the images. Feel free to adjust this.
     transform = transforms.Compose(preprocess)
     train_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=transform)
+    
+    # Add new augmented samples to dataset only if aug_train parameter is used
     if args.aug_train:
         augment = transforms.Compose(augmentation)
         aug_dataset = ImageFolder(os.path.join(data_root, 'train'), transform=augment)
@@ -185,6 +189,7 @@ def wallpaper_main(args):
 
     print(f"Training on {len(train_dataset)} images, testing on {len(test_dataset)} images.")
     # Initialize the model, optimizer, and loss function
+    # Change to CNN to run the script for the baseline CNN model
     model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     criterion = nn.CrossEntropyLoss()
@@ -294,6 +299,21 @@ def taiji_main(args):
 
 
 def evaluate_model(model: nn.Module, args: Any):
+    '''
+    Description:
+        Helper function to evaluate the teseting accuracy of
+        a model given a .pth file using the --model_path
+        command-line argument. Also accepts saved checkpoint
+        but --eval_ckpt must be provided
+        Called when the --test_model arg is used
+    Args:
+        args: Command line arguments
+        model: model for evaluating
+    Returns:
+        None
+        prints testing accuracy on a particular test dataset
+        provided in the --test_set command-line argument.
+    '''
     num_classes = 17
     if args.device == 'cuda':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -325,9 +345,11 @@ def evaluate_model(model: nn.Module, args: Any):
     test_dataset = ImageFolder(os.path.join(data_root, args.test_set), transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
-    # model = CNN2(input_channels=1, img_size=args.img_size, num_classes=num_classes).to(device)
     model.to(device)
     criterion = nn.CrossEntropyLoss()
+
+    # Load model or checkpoint depending on command-line
+    # args
     if args.model_path and not args.eval_ckpt:
         model.load_state_dict( torch.load(args.model_path) )
     elif args.model_path and args.eval_ckpt:
@@ -336,12 +358,28 @@ def evaluate_model(model: nn.Module, args: Any):
     else:
         print('No model .pth or .ckpt file found!')
     
+    # Evaluate and generate stats
     test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
     classes_test, overall_test_mat = get_stats(test_preds, test_targets, num_classes)
     print(f'Test accuracy: {test_acc*100:.3f}')
 
 
 def resume_training(args):
+    '''
+    Description: 
+        Helper function to resume training from
+        a checkpoint provided through command-line arguments.
+        Called when --resume_training arg is passed.
+
+        NOTE: This function is still a bit hacky, but gets the 
+        job done for the few models currently supported
+    Args:
+        args: Command-line arguments
+    Returns:
+        None
+        Saves checkpoints in a logs dir within the dir 
+        provided to the --save_dir argument
+    '''
     if not os.path.exists(args.model_path):
         raise ValueError('Path {} does not exist!!'.format(args.model_path))
     ckpt = torch.load(args.model_path)
@@ -354,10 +392,13 @@ def resume_training(args):
     if args.model_type == 'Resnet':
         model = Resnet().to(device)
         # Need to freeze model layers before loading optimizer state dict
+        
+        # Experiment to freeze the middle of the model!
         # for child in list( model.children() )[0][:-2][-1][:-4]:
         #     for param in child.parameters():
         #         param.requires_grad_(False)
 
+        # Standard Transfer Learning Freezing Approach
         for child in list( model.children() )[0][:-1][:-2]:
             for param in child.parameters():
                 param.requires_grad_(False)
@@ -365,8 +406,13 @@ def resume_training(args):
         for param in list(model.children())[0][:-1][:-1][-1][:-5].parameters():
             param.requires_grad_(False)
 
+    # Not supported due to the limited success
+    # with this model
     elif args.model_type == 'Densenet':
         model = Densenet().to(device)
+    
+    # Mobilenet is trained from scratch, we
+    # don't need to worry about model freezing
     elif args.model_type == 'Mobilenet':
         model = Mobilenet().to(device)
     else:
@@ -374,7 +420,8 @@ def resume_training(args):
 
     model.load_state_dict( ckpt['model_state_dict'] )
     
-    
+    # Adam is used for the majority of experiments
+    # Comment this out and use RMSProp for Mobilenet training
     optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
     
     # Google's Training Recipe
@@ -498,6 +545,9 @@ def resume_training(args):
                     "scheduler_state_dict":scheduler_val
                 }, ckpt_path)
 
+    # Following code hasn't been refactored and may be a bit buggy
+    # but doesn't affect the training/testing accuracy. 
+    # TODO: Clean up post-training code
     preds = np.concatenate(preds)
     targets = np.concatenate(targets)
     return model, np.array(per_epoch_loss), np.array(per_epoch_acc), preds, targets        
@@ -571,11 +621,12 @@ def resnet_main(args: Any):
         param.requires_grad_(False)
 
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
     criterion = nn.CrossEntropyLoss()
 
     # Train + test the model
     model, per_epoch_loss, per_epoch_acc, train_preds, train_targets = train(model, train_loader, optimizer, criterion, args.num_epochs, 
-                                                                             args.log_interval, device, args.log_dir )
+                                                                             args.log_interval, device, args.log_dir, lr_scheduler )
     test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
 
     # Get stats 
@@ -807,6 +858,23 @@ def mobilenet_main(args: Any):
 
 
 def visualize_maps(args: Any, model: nn.Module):
+    '''
+    Description:
+        Helper function to visualize feature maps
+        from the second convolutional block in
+        CNN2. We choose the first feature map
+        for all 17 classes across all samples.
+        Also generates TSNE visualization of 
+        penultimate FC layer
+    Args:
+        args: Command-line arguments
+        model: PyTorch model to extract maps
+        from.
+    Returns:
+        None
+        Saves the feature maps and TSNE visualization
+        in the dir provided to --save_dir
+    '''
     # Lists to store hook outputs
     activation = []
     tsne_input = [] 
@@ -924,6 +992,7 @@ def visualize_maps(args: Any, model: nn.Module):
 if __name__ == '__main__':
     args = arg_parse()
     
+    # Handle cases for evaluating supported models
     if args.test_model:
         if args.model_type == 'CNN2':
             model = CNN2(input_channels=1, img_size=args.img_size, num_classes=17)
@@ -938,6 +1007,7 @@ if __name__ == '__main__':
         evaluate_model(model, args)
         visualize(args, dataset='Wallpaper')
     
+    # Feature Map and T-SNE visualization
     elif args.maps:
         if args.device == 'cuda':
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -947,6 +1017,8 @@ if __name__ == '__main__':
         model.load_state_dict( torch.load(args.model_path, map_location=device) )
         visualize_maps(args, model)
     
+    # Resume checkpointed training for supported
+    # models
     elif args.resume_training:
         model, per_epoch_loss, per_epoch_acc, preds, targets = resume_training(args)
         model_dir = os.path.join( args.save_dir, 'cnn.pth' )
@@ -963,6 +1035,9 @@ if __name__ == '__main__':
         mobilenet_main(args)
         visualize(args, dataset='Wallpaper')
         plot_training_curve(args)
+
+    # Default Taiji and Wallpaper script for standard CNN 
+    # and MLP models
     else:
         if args.dataset == 'Wallpaper':
             if args.train:
