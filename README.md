@@ -1,31 +1,18 @@
-# PRML Project 3, Spring 2023
+# PRML Project 3: Deep Learning
+Github Repository for PRML Project 3.
+Look at demo.ipynb to reproduce all results presented in the report.
+A GPU runtime is ideal for reproducing results, see notebook for details.
 
-  /\ ___ /\
- (  o   o  ) Wecome to PRML Project 3!
-  \  >#<  /
-  /       \  
- /         \       ^
-|           |     //
- \         /    //
-  ///  ///   --
+Best Classification Accuracy on Challenge Set: 62% using ResNet101
+Optimal Solution: 42% Test Accuracy using MobileNetv3
 
-We provide some starter code for this project. Some functions are fully implemented, and there are some others that you will need to implement yourself. See below for file descriptions. Read the project description on CANVAS for more details on the project. Note the provided code is just a starting point and you may want to add certain functionality to it other than what is required.
+classification.py: 
+  - Contains main scripts for training MLP and custom CNN models. 
+  - Supports transfer learning for pretrained models (Extra Credit)
+  - NOTE: Checkpointing method is a bit hacky
 
-## Installation
-This project will use multiple packages which you will likely need to install. We recommend creating a virtual environment using Anaconda for this project and installing packages via pip. The required packages are listed in `requirements.txt`. The following demonstrates setting up a conda env and installing the required packages:
-
-```
-conda create -n p python=3.9
-conda activate p
-pip install -r requirements.txt
-```
-
-Please be aware the installation process can vary between operating systems. If you have a GPU, you may also want to install the GPU version of PyTorch. See the [PyTorch Installation Guide](https://pytorch.org/get-started/locally/) for more details.
-
-## Running the Code
-The main file, `classification.py`, contains the code for running the classification. The code is set up to run with the default values for all arguments. You can vary the arguments by passing them in from the command line. For the command line arguments, please look at the `arg_parse` function in `util.py`. **Note**: to train the model you'll need to have the arg --train.
-
-You will control which dataset to work with through `--dataset`: which dataset to use (taiji or wallpaper). Please feel free to modify the arguments in anyway you see fit.
+model.py:
+  - Contains all models
 
 ## Quickstart 
 After installing the required packages, you can run the code to train each "variant" of the datasets with (assuming your system is compatible with the default arguments):
@@ -54,31 +41,3 @@ python classification.py --dataset Wallpaper --train --test_set test_challenge
     - Both train and test have directories for each class containing the images for that class.
     - test_augment contains the augmented test images (harder to classify)
 
-## Provided Code
-Note this data is just to get you started and you may edit it according to your needs so long as the basic functionality is preserved. You'll be given code to
-- train and test the model
-- load the datasets and create a dataloader
-- Some of the visualization code such as plotting the confusion matrix and accuracy
-
-## Code you need to edit/implement
-Note that most (if not all) places you need to edit the code are marked with "TODO" markers that you can search for.
-- A function for visualizing a networks layers
-- A function for performing t-SNE on the features
-- CNN + Multi-Layer Perceptron (MLP) imrpovements
-- A function for performing data augmentation (EC)
-- A function for finetuning a pretrained model (EC)
-
-## Package Imports for the Assigment
-Everything you need is in the starter code for the MLP.
-For the CNN impelementation, you will make use of the following packages:
-- Data augmentation: `torchvision.transforms`
-- Finetuning an existing pretrained model: `torchvision.models`
-- t-SNE: `sklearn.manifold.TSNE`
-- Layer visualization: can be done using the existing packages (torchvision, torch, etc.)
-
-
-## Tips
-- Read the project description on CANVAS for more details on the project.
-- You may find it helpful to save the trained model and load it for visualization or testing purposes. You will need to add functionality to support this.
-
-Good luck!

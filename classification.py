@@ -9,7 +9,39 @@ file that you add code to.)
 {
     Name: Piyush Nagasubramaniam
     PSU Email ID: pvn5119@psu.edu
-    Description: (A short description of what each of the functions you've written does.).
+    Description:
+        1. train (Modified): Added support for LR schedulers for
+        adaptive learning rates during training. Currently supports
+        Cosine Annealing (without restarts) and StepLR
+
+        2. wallpaper_main (Modified): Uses CNN2 and supports data augmentation
+
+        3. evaluate_model (New): 
+            Helper function to evaluate the teseting accuracy of
+            a model given a .pth file using the --model_path
+            command-line argument. Also accepts saved checkpoint
+            but --eval_ckpt must be provided
+            Called when the --test_model arg is used
+        
+        4. resume_training (New):  
+            Helper function to resume training from
+            a checkpoint provided through command-line arguments.
+            Called when --resume_training arg is passed.
+
+            NOTE: This function is still a bit hacky, but gets the 
+            job done for the few models currently supported
+        
+        5. visualize_maps (New):
+            Helper function to visualize feature maps
+            from the second convolutional block in
+            CNN2. We choose the first feature map
+            for all 17 classes across all samples.
+            Also generates TSNE visualization of 
+            penultimate FC layer
+        
+        6. resnet_main, densenet_main, and mobilenet_main support training
+        process specific to each of the models including use of different
+        optimizers/lr schedulers.
 }
 '''
 import os
@@ -393,18 +425,9 @@ def resume_training(args):
         model = Resnet().to(device)
         # Need to freeze model layers before loading optimizer state dict
         
-        # Experiment to freeze the middle of the model!
-        # for child in list( model.children() )[0][:-2][-1][:-4]:
-        #     for param in child.parameters():
-        #         param.requires_grad_(False)
-
-        # Standard Transfer Learning Freezing Approach
-        for child in list( model.children() )[0][:-1][:-2]:
+        for child in list( model.children() )[0][:-2][-1][:-4]:
             for param in child.parameters():
                 param.requires_grad_(False)
-
-        for param in list(model.children())[0][:-1][:-1][-1][:-5].parameters():
-            param.requires_grad_(False)
 
     # Not supported due to the limited success
     # with this model
@@ -424,7 +447,7 @@ def resume_training(args):
     # Comment this out and use RMSProp for Mobilenet training
     optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
     
-    # Google's Training Recipe
+    # Google's Training Recipe adapted for this project
     # optimizer = torch.optim.RMSprop( 
     #     [p for p in model.parameters() if p.requires_grad], 
     #     lr=args.lr, 
@@ -609,24 +632,17 @@ def resnet_main(args: Any):
 
     # # Freeze backbone for transfer learning
     # # and leave a few unfrozen layers for finetuning
-    # for child in list( model.children() )[0][:-2][-1][:-4]:
-    #     for param in child.parameters():
-    #         param.requires_grad_(False)
-
-    for child in list( model.children() )[0][:-1][:-2]:
+    for child in list( model.children() )[0][:-2][-1][:-4]:
         for param in child.parameters():
             param.requires_grad_(False)
 
-    for param in list(model.children())[0][:-1][:-1][-1][:-5].parameters():
-        param.requires_grad_(False)
-
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
+    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
     criterion = nn.CrossEntropyLoss()
 
     # Train + test the model
     model, per_epoch_loss, per_epoch_acc, train_preds, train_targets = train(model, train_loader, optimizer, criterion, args.num_epochs, 
-                                                                             args.log_interval, device, args.log_dir, lr_scheduler )
+                                                                             args.log_interval, device, args.log_dir )
     test_loss, test_acc, test_preds, test_targets = test(model, test_loader, device, criterion)
 
     # Get stats 
