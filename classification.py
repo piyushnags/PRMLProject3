@@ -384,8 +384,8 @@ def resume_training(args):
     scheduler_state_dict = ckpt['scheduler_state_dict']
     scheduler = None
     if scheduler_state_dict is not None:
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.973)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
+        # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.973)
         scheduler.load_state_dict(scheduler_state_dict)
     start_epoch = ckpt['epoch'] + 1
     end_epoch = start_epoch + args.num_epochs
@@ -549,11 +549,18 @@ def resnet_main(args: Any):
     # Initialize the model, optimizer, and loss function
     model = Resnet(pretrained=True).to(device)
 
-    # Freeze backbone for transfer learning
-    # and leave a few unfrozen layers for finetuning
-    for child in list( model.children() )[0][:-2][-1][:-4]:
+    # # Freeze backbone for transfer learning
+    # # and leave a few unfrozen layers for finetuning
+    # for child in list( model.children() )[0][:-2][-1][:-4]:
+    #     for param in child.parameters():
+    #         param.requires_grad_(False)
+
+    for child in list( model.children() )[0][:-1][:-2]:
         for param in child.parameters():
             param.requires_grad_(False)
+
+    for param in list(model.children())[0][:-1][:-1][-1][:-5].parameters():
+        param.requires_grad_(False)
 
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
     criterion = nn.CrossEntropyLoss()
@@ -748,19 +755,19 @@ def mobilenet_main(args: Any):
     # for param in ( list( model.children() )[:-1][0][0][:-3] ).parameters():
     #     param.requires_grad_(False)
 
-    # optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
-    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
+    optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5, 1e-6)
 
     # Google's Training Recipe
-    optimizer = torch.optim.RMSprop( 
-        [p for p in model.parameters() if p.requires_grad], 
-        lr=args.lr, 
-        momentum=0.9,
-        weight_decay=1e-5,
-        eps=0.0316,
-        alpha=0.9
-        )
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.973)
+    # optimizer = torch.optim.RMSprop( 
+    #     [p for p in model.parameters() if p.requires_grad], 
+    #     lr=args.lr, 
+    #     momentum=0.9,
+    #     weight_decay=1e-5,
+    #     eps=0.0316,
+    #     alpha=0.9
+    #     )
+    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.973)
     criterion = nn.CrossEntropyLoss()
 
     # Train + test the model
