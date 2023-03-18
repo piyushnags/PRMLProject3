@@ -367,17 +367,17 @@ def resume_training(args):
     model.load_state_dict( ckpt['model_state_dict'] )
     
     
-    # optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
+    optimizer = torch.optim.Adam( [p for p in model.parameters() if p.requires_grad], lr=args.lr )
     
     # Google's Training Recipe
-    optimizer = torch.optim.RMSprop( 
-        [p for p in model.parameters() if p.requires_grad], 
-        lr=args.lr, 
-        momentum=0.9,
-        weight_decay=1e-5,
-        eps=0.0316,
-        alpha=0.9
-        )
+    # optimizer = torch.optim.RMSprop( 
+    #     [p for p in model.parameters() if p.requires_grad], 
+    #     lr=args.lr, 
+    #     momentum=0.9,
+    #     weight_decay=1e-5,
+    #     eps=0.0316,
+    #     alpha=0.9
+    #     )
     optimizer.load_state_dict( ckpt['optimizer_state_dict'] )
     
     
