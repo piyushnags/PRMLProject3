@@ -1021,7 +1021,6 @@ if __name__ == '__main__':
         else:
             raise ValueError('{} model not supported, please try Resnet/CNN2'.format(args.model_type))
         evaluate_model(model, args)
-        visualize(args, dataset='Wallpaper')
     
     # Feature Map and T-SNE visualization
     elif args.maps:
