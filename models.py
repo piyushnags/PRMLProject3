@@ -36,11 +36,11 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
 
         # Baseline Architecture
-        self.layers = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.Linear(hidden_dim, output_dim),
-        )
+        # self.layers = nn.Sequential(
+        #     nn.Linear(input_dim, hidden_dim),
+        #     nn.Linear(hidden_dim, hidden_dim),
+        #     nn.Linear(hidden_dim, output_dim),
+        # )
         
         # Modified Arch 1
         # Best Hyperparameters: (Batch size=1024, lr=0.010, epochs=20)
@@ -58,20 +58,20 @@ class MLP(nn.Module):
 
         # Modified Arch 2
         # Best Hyperparameters: (Batch size=1024, lr=0.016, epochs=20)
-        # self.layers = nn.Sequential(
-        #     nn.Linear(input_dim, hidden_dim//2),
+        self.layers = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim//2),
 
-        #     nn.Linear(hidden_dim//2, hidden_dim//2),
-        #     nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
-        #     nn.ReLU6(),
+            nn.Linear(hidden_dim//2, hidden_dim//2),
+            nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
+            nn.ReLU6(),
 
-        #     nn.Linear(hidden_dim//2, hidden_dim//2),
-        #     nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
-        #     nn.ReLU6(),
+            nn.Linear(hidden_dim//2, hidden_dim//2),
+            nn.BatchNorm1d(hidden_dim//2, eps=1e-7, momentum=0.1),
+            nn.ReLU6(),
 
-        #     nn.Linear(hidden_dim//2, output_dim),
-        #     nn.Dropout(0.2),
-        # )
+            nn.Linear(hidden_dim//2, output_dim),
+            nn.Dropout(0.2),
+        )
 
     def forward(self, x):
         return F.log_softmax(self.layers(x), dim=1)
